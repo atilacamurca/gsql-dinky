@@ -1,0 +1,13 @@
+Format-Specification: http://wiki.debian.org/Proposals/CopyrightFormat
+Upstream-Name: gsql-dinky
+Upstream-Maintainer: Átila Camurça <camurca.home@gmail.com>
+Upstream-Source: UNKNOWN
+
+Files: *
+Copyright: (C) 2011 &#193;tila Camur&#231;a camurca.home@gmail.com</property>
+Copyright: (C) 2011 &#193;tila Camur&#231;a camurca.home@gmail.com</property><property name="border_width">5</property>
+Copyright: (C) 2011 &#195;&#129;tila Camur&#195;&#167;a camurca.home@gmail.com
+Copyright: (C) 2011 Átila Camurça camurca.home@gmail.com
+License: GPL-3
+ The full text of the GPL is distributed in
+ /usr/share/common-licenses/GPL-3 on Debian systems.

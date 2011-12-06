@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Gsql Dinky
+Comment=Sql formatting tool
+Comment[pt_BR]=Ferramenta de formatação de Sql
+Categories=GNOME;Development;Database;
+Exec=gsql-dinky
+Icon=/usr/share/gsql-dinky/media/icon.png
+Terminal=false
+Type=Application

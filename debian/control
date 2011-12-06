@@ -1,0 +1,23 @@
+Source: gsql-dinky
+Section: python
+Priority: extra
+Build-Depends: cdbs (>= 0.4.43),
+ debhelper (>= 6),
+ python,
+ python-support (>= 0.6.4),
+ python-distutils-extra (>= 2.10)
+Maintainer: Átila Camurça <camurca.home@gmail.com>
+Standards-Version: 3.8.3
+XS-Python-Version: current
+
+Package: gsql-dinky
+Architecture: all
+XB-Python-Version: ${python:Versions}
+Depends: ${misc:Depends},
+ ${python:Depends},
+ python-gtk2,
+ python-desktopcouch-records
+Description: Sql formatting tool
+ Simple add a sql statement and the gsql-dinky will access
+ http://sqlformat.appspot.com/format/ and format the sql in a human-
+ readable way

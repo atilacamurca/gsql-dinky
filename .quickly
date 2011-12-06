@@ -1,0 +1,4 @@
+project = gsql-dinky
+version = 0.4.3
+template = ubuntu-application
+ppa = dinky

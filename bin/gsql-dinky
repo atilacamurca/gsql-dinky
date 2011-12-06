@@ -1,0 +1,196 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+### BEGIN LICENSE
+# Copyright (C) 2011 Átila Camurça camurca.home@gmail.com
+# This program is free software: you can redistribute it and/or modify it 
+# under the terms of the GNU General Public License version 3, as published 
+# by the Free Software Foundation.
+# 
+# This program is distributed in the hope that it will be useful, but 
+# WITHOUT ANY WARRANTY; without even the implied warranties of 
+# MERCHANTABILITY, SATISFACTORY QUALITY, or FITNESS FOR A PARTICULAR 
+# PURPOSE.  See the GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License along 
+# with this program.  If not, see <http://www.gnu.org/licenses/>.
+### END LICENSE
+
+import sys
+import os
+import gtk
+
+import urllib
+import urllib2
+
+import gettext
+from gettext import gettext as _
+gettext.textdomain('gsql-dinky')
+
+# optional Launchpad integration
+# this shouldn't crash if not found as it is simply used for bug reporting
+try:
+    import LaunchpadIntegration
+    launchpad_available = True
+except:
+    launchpad_available = False
+
+# Add project root directory (enable symlink, and trunk execution).
+PROJECT_ROOT_DIRECTORY = os.path.abspath(
+    os.path.dirname(os.path.dirname(os.path.realpath(sys.argv[0]))))
+
+if (os.path.exists(os.path.join(PROJECT_ROOT_DIRECTORY, 'gsql_dinky'))
+    and PROJECT_ROOT_DIRECTORY not in sys.path):
+    sys.path.insert(0, PROJECT_ROOT_DIRECTORY)
+    os.putenv('PYTHONPATH', PROJECT_ROOT_DIRECTORY) # for subprocesses
+
+from gsql_dinky import (
+    AboutGsqlDinkyDialog, PreferencesGsqlDinkyDialog)
+from gsql_dinky.helpers import get_builder
+
+
+class GsqlDinkyWindow(gtk.Window):
+    __gtype_name__ = "GsqlDinkyWindow"
+    
+    # To construct a new instance of this method, the following notable 
+    # methods are called in this order:
+    # __new__(cls)
+    # __init__(self)
+    # finish_initializing(self, builder)
+    # __init__(self)
+    #
+    # For this reason, it's recommended you leave __init__ empty and put
+    # your inialization code in finish_intializing
+    
+    def __new__(cls):
+        """Special static method that's automatically called by Python when 
+        constructing a new instance of this class.
+        
+        Returns a fully instantiated GsqlDinkyWindow object.
+        """
+        builder = get_builder('GsqlDinkyWindow')
+        new_object = builder.get_object("gsql_dinky_window")
+        new_object.finish_initializing(builder)
+        return new_object
+
+    def on_button_about_clicked(self, widget, data=None):
+        print 'about'
+        self.about(self, widget)
+
+    def on_button_ok_clicked(self, widget, data=None):
+        print 'ok'
+        try:
+            buffer = self.text_raw_sql.get_buffer()
+            payload = (
+	            ('data', buffer.get_text(buffer.get_start_iter(), buffer.get_end_iter())),
+	            ('format', 'text'),
+	            ('keyword_case', 'upper'),
+	            ('reindent', True),
+	            ('n_indents', 3),
+            )
+
+            response = urllib2.urlopen('http://sqlformat.appspot.com/format/',
+	            urllib.urlencode(payload))
+
+            format_buffer = self.text_dinky_sql.get_buffer()
+            format_buffer.set_text(response.read())
+        except:
+            # TODO: create a window to show the message
+            print 'Verify your connection with the internet'
+            print "Unexpected error:", sys.exc_info()[0]
+            raise
+
+    def on_toolbutton_quit_clicked(self, widget, data=None):
+        print 'quit'
+        self.quit(self, widget)
+
+    def on_toolbutton_pref_clicked(self, widget, data=None):
+        print 'pref'
+        self.preferences(self, widget)
+
+    def on_toolbutton_cut_clicked(self, widget, data=None):
+        print 'cut'
+
+    def on_toolbutton_copy_clicked(self, widget, data=None):
+        print 'copy'
+
+    def on_toolbutton_clear_clicked(self, widget, data=None):
+        print 'clear'
+        self.text_raw_sql.get_buffer().set_text('')
+        self.text_dinky_sql.get_buffer().set_text('')
+        self.text_raw_sql.grab_focus() # set focus on the raw_sql again ...
+
+    def finish_initializing(self, builder):
+        """Called while initializing this instance in __new__
+
+        finish_initalizing should be called after parsing the UI definition
+        and creating a GsqlDinkyWindow object with it in order to finish
+        initializing the start of the new GsqlDinkyWindow instance.
+        
+        Put your initilization code in here and leave __init__ undefined.
+        """
+        # Get a reference to the builder and set up the signals.
+        self.builder = builder
+        self.builder.connect_signals(self)
+
+        global launchpad_available
+        if launchpad_available:
+            # see https://wiki.ubuntu.com/UbuntuDevelopment/Internationalisation/Coding for more information
+            # about LaunchpadIntegration
+            helpmenu = self.builder.get_object('helpMenu')
+            if helpmenu:
+                LaunchpadIntegration.set_sourcepackagename('gsql-dinky')
+                LaunchpadIntegration.add_items(helpmenu, 0, False, True)
+            else:
+                launchpad_available = False
+
+        # Uncomment the following code to read in preferences at start up.
+        #dlg = PreferencesGsqlDinkyDialog.PreferencesGsqlDinkyDialog()
+        #self.preferences = dlg.get_preferences()
+
+        # Code for other initialization actions should be added here.
+        self.text_raw_sql = self.builder.get_object("text_raw_sql")
+        self.text_dinky_sql = self.builder.get_object("text_dinky_sql")
+
+    def about(self, widget, data=None):
+        """Display the about box for gsql-dinky."""
+        about = AboutGsqlDinkyDialog.AboutGsqlDinkyDialog()
+        response = about.run()
+        about.destroy()
+
+    def preferences(self, widget, data=None):
+        """Display the preferences window for gsql-dinky."""
+        prefs = PreferencesGsqlDinkyDialog.PreferencesGsqlDinkyDialog()
+        response = prefs.run()
+        if response == gtk.RESPONSE_OK:
+            # Make any updates based on changed preferences here.
+            pass
+        prefs.destroy()
+
+    def quit(self, widget, data=None):
+        """Signal handler for closing the GsqlDinkyWindow."""
+        self.destroy()
+
+    def on_destroy(self, widget, data=None):
+        """Called when the GsqlDinkyWindow is closed."""
+        # Clean up code for saving application state should be added here.
+        gtk.main_quit()
+
+if __name__ == "__main__":
+    # Support for command line options.
+    import logging
+    import optparse
+    parser = optparse.OptionParser(version="%prog %ver")
+    parser.add_option(
+        "-v", "--verbose", action="store_true", dest="verbose",
+        help=_("Show debug messages"))
+    (options, args) = parser.parse_args()
+
+    # Set the logging level to show debug messages.
+    if options.verbose:
+        logging.basicConfig(level=logging.DEBUG)
+        logging.debug('logging enabled')
+
+    # Run the application.
+    window = GsqlDinkyWindow()
+    window.show()
+    gtk.main()
